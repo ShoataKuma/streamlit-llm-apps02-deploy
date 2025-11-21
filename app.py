@@ -25,7 +25,7 @@ def get_llm_response(user_input: str, expert_type: str, chat_history: list) -> s
     
     Args:
         user_input (str): ユーザーからの入力テキスト
-        expert_type (str): 専門家のタイプ（"healthcare" または "law"）
+        expert_type (str): 専門家のタイプ（"business" または "law"）
         chat_history (list): 会話履歴のリスト
     
     Returns:
@@ -35,8 +35,8 @@ def get_llm_response(user_input: str, expert_type: str, chat_history: list) -> s
     llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
     
     # 専門家タイプに応じてシステムメッセージを設定
-    if expert_type == "healthcare":
-        system_content = "あなたはヘルスケアの専門家です。医療、健康、栄養、運動などに関する質問に専門的な知識を持って回答してください。"
+    if expert_type == "business":
+        system_content = "あなたは優秀で丁寧な営業マンです。ユーザーから与えられた文章をビジネス文書として整え、読みやすく洗練された文章に変換してください。敬語を適切に使用し、ビジネスシーンで使える丁寧で分かりやすい表現にしてください。"
     elif expert_type == "law":
         system_content = "あなたは日本の法律の専門家です。日本の法律、法規制、法的手続きなどに関する質問に専門的な知識を持って回答してください。"
     else:
@@ -76,7 +76,7 @@ def main():
     5. **リセット**: 「会話をリセット」ボタンで会話履歴をクリアできます
     
     ### 利用可能な専門家
-    - **ヘルスケアの専門家**: 医療、健康、栄養、運動などに関する質問に回答
+    - **優秀で丁寧な営業マン**: 与えられた文章をビジネス文書として整え、読みやすく洗練された文章に変換
     - **日本の法律の専門家**: 日本の法律、法規制、法的手続きなどに関する質問に回答
     """)
     
@@ -92,15 +92,15 @@ def main():
     st.sidebar.header("専門家の選択")
     expert_type = st.sidebar.radio(
         "相談したい専門家を選択してください:",
-        options=["healthcare", "law"],
-        format_func=lambda x: "👨‍⚕️ ヘルスケアの専門家" if x == "healthcare" else "⚖️ 日本の法律の専門家",
+        options=["business", "law"],
+        format_func=lambda x: "💼 優秀で丁寧な営業マン" if x == "business" else "⚖️ 日本の法律の専門家",
         index=0
     )
     
     # 選択された専門家の表示
-    if expert_type == "healthcare":
-        st.sidebar.success("現在の専門家: ヘルスケアの専門家 👨‍⚕️")
-        st.sidebar.info("医療、健康、栄養、運動などに関する質問にお答えします。")
+    if expert_type == "business":
+        st.sidebar.success("現在の専門家: 優秀で丁寧な営業マン 💼")
+        st.sidebar.info("文章をビジネス文書として整え、読みやすく洗練された表現に変換します。")
     else:
         st.sidebar.success("現在の専門家: 日本の法律の専門家 ⚖️")
         st.sidebar.info("日本の法律、法規制、法的手続きなどに関する質問にお答えします。")
