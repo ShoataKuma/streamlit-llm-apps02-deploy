@@ -200,31 +200,29 @@ def main():
         with st.expander("📧 生成されたビジネスメール", expanded=True):
             st.markdown(st.session_state.summary_email)
             
-            # コピーボタン用のテキストエリアとコピーボタン
-            col1, col2 = st.columns([5, 1])
-            with col1:
-                st.text_area(
-                    "コピー用",
-                    st.session_state.summary_email,
-                    height=300,
-                    key="summary_copy"
-                )
-            with col2:
-                st.write("")  # 上部の余白調整
-                st.write("")
-                if st.button("📋 コピー", use_container_width=True):
-                    st.toast("クリップボードにコピーされました！", icon="✅")
-                    # JavaScriptを使用してクリップボードにコピー
-                    st.write(f"""
-                    <script>
-                    navigator.clipboard.writeText(`{st.session_state.summary_email.replace('`', '\\`')}`);
-                    </script>
-                    """, unsafe_allow_html=True)
+            # コピー用のテキストエリア
+            st.text_area(
+                "コピー用",
+                st.session_state.summary_email,
+                height=300,
+                key="summary_copy"
+            )
         
-        # まとめをクリア
-        if st.button("❌ まとめを閉じる"):
-            del st.session_state.summary_email
-            st.rerun()
+        # コピーボタンとまとめを閉じるボタンを横並びに配置
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📋 コピー", use_container_width=True):
+                st.toast("クリップボードにコピーされました！", icon="✅")
+                # JavaScriptを使用してクリップボードにコピー
+                st.write(f"""
+                <script>
+                navigator.clipboard.writeText(`{st.session_state.summary_email.replace('`', '\\`')}`);
+                </script>
+                """, unsafe_allow_html=True)
+        with col2:
+            if st.button("❌ まとめを閉じる", use_container_width=True):
+                del st.session_state.summary_email
+                st.rerun()
         
         st.divider()
     
