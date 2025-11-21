@@ -1,10 +1,15 @@
 import streamlit as st
+import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
 # .envファイルから環境変数を読み込む
 load_dotenv()
+
+# Streamlit Cloudの場合はst.secretsから環境変数を設定
+if "OPENAI_API_KEY" in st.secrets:
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 # ページ設定
 st.set_page_config(
@@ -43,7 +48,7 @@ def get_llm_response(user_input: str, expert_type: str) -> str:
     ]
     
     # LLMに問い合わせ
-    result = llm(messages)
+    result = llm.invoke(messages)
     
     return result.content
 
