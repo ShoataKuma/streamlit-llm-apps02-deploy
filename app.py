@@ -19,6 +19,45 @@ st.set_page_config(
 )
 
 
+def generate_summary_email(messages: list) -> str:
+    """
+    会話履歴からビジネスメール形式のまとめを生成する関数
+    
+    Args:
+        messages (list): 会話履歴のリスト
+    
+    Returns:
+        str: ビジネスメール形式のまとめ
+    """
+    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
+    
+    # 会話履歴をテキストに変換
+    conversation_text = ""
+    for msg in messages:
+        role = "質問" if msg["role"] == "user" else "回答"
+        conversation_text += f"{role}: {msg['content']}\n\n"
+    
+    # サマリー生成用のプロンプト
+    system_content = """あなたは優秀で丁寧な営業マンです。
+以下の会話履歴の内容を、1つのビジネスメールとして分かりやすくまとめてください。
+
+【重要な指示】
+- 書き出しは必ず「平素より格別のご高配を賜り厚く御礼申し上げます。」から始める
+- 会話の内容を論理的に整理し、ビジネス文書として適切な形式にする
+- 敬語を適切に使用し、丁寧で分かりやすい表現を使う
+- 適切な段落分けと箇条書きを使用して読みやすくする
+- 相手は学校の先生で、こちらは卒業アルバム制作業者だという前提で文章を作成する
+- 最後は適切な締めの言葉で終わる"""
+    
+    messages_for_llm = [
+        SystemMessage(content=system_content),
+        HumanMessage(content=f"以下の会話履歴をビジネスメールとしてまとめてください:\n\n{conversation_text}")
+    ]
+    
+    result = llm.invoke(messages_for_llm)
+    return result.content
+
+
 def get_llm_response(user_input: str, expert_type: str, chat_history: list) -> str:
     """
     入力テキストと専門家タイプ、会話履歴を受け取り、LLMからの回答を返す関数
@@ -112,6 +151,17 @@ def main():
         st.session_state.messages = []
         st.rerun()
     
+    # 営業マン選択時のまとめ生成ボタン
+    if expert_type == "business" and len(st.session_state.messages) > 0:
+        st.sidebar.divider()
+        if st.sidebar.button("📧 ビジネスメールとしてまとめる", type="primary", use_container_width=True):
+            with st.spinner("📝 ビジネスメールを生成中..."):
+                try:
+                    summary_email = generate_summary_email(st.session_state.messages)
+                    st.session_state.summary_email = summary_email
+                except Exception as e:
+                    st.sidebar.error(f"エラー: {str(e)}")
+    
     # 会話履歴の表示
     st.sidebar.divider()
     st.sidebar.subheader("📊 会話統計")
@@ -119,6 +169,27 @@ def main():
     
     # メインコンテンツエリア
     st.header("💬 会話")
+    
+    # ビジネスメールのまとめを表示（生成された場合）
+    if "summary_email" in st.session_state and st.session_state.summary_email:
+        st.success("✅ ビジネスメールが生成されました！")
+        with st.expander("📧 生成されたビジネスメール", expanded=True):
+            st.markdown(st.session_state.summary_email)
+            
+            # コピーボタン用のテキストエリア
+            st.text_area(
+                "コピー用",
+                st.session_state.summary_email,
+                height=300,
+                key="summary_copy"
+            )
+        
+        # まとめをクリア
+        if st.button("❌ まとめを閉じる"):
+            del st.session_state.summary_email
+            st.rerun()
+        
+        st.divider()
     
     # 会話履歴の表示
     for message in st.session_state.messages:
