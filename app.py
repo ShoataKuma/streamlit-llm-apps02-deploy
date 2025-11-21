@@ -48,7 +48,7 @@ def generate_summary_email(messages: list) -> str:
 - 適切な段落分けと箇条書きを使用して読みやすくする
 - 催促や否定をする場合は、必ず先生方を想った表現にする
   例：「卒業アルバム作成スケジュールの都合上、～をできるだけ早めにお願いいたします」
-  例：「これ以上過ぎてしまいますと、校正閲覧時間が短くなるなど、先生方にとってデメリットが大きくなってしまうため」
+  例：「これ以上遅くなってしまいますと、校正閲覧時間が短くなるなど、先生方にとってデメリットが大きくなってしまうため」
 - 常に先生方の立場に立ち、先生方のためという姿勢を明確にする
 - 最後は適切な締めの言葉で終わる
 - メールの最後に以下の署名を必ず追加する：
@@ -198,13 +198,26 @@ def main():
         with st.expander("📧 生成されたビジネスメール", expanded=True):
             st.markdown(st.session_state.summary_email)
             
-            # コピーボタン用のテキストエリア
-            st.text_area(
-                "コピー用",
-                st.session_state.summary_email,
-                height=300,
-                key="summary_copy"
-            )
+            # コピーボタン用のテキストエリアとコピーボタン
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                st.text_area(
+                    "コピー用",
+                    st.session_state.summary_email,
+                    height=300,
+                    key="summary_copy"
+                )
+            with col2:
+                st.write("")  # 上部の余白調整
+                st.write("")
+                if st.button("📋 コピー", use_container_width=True):
+                    st.toast("クリップボードにコピーされました！", icon="✅")
+                    # JavaScriptを使用してクリップボードにコピー
+                    st.write(f"""
+                    <script>
+                    navigator.clipboard.writeText(`{st.session_state.summary_email.replace('`', '\\`')}`);
+                    </script>
+                    """, unsafe_allow_html=True)
         
         # まとめをクリア
         if st.button("❌ まとめを閉じる"):
