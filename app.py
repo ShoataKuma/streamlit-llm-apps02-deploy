@@ -303,8 +303,14 @@ def main():
     # メインコンテンツエリア
     st.header("💬 会話")
     
-    # ビジネスメールのまとめを表示（生成された場合）
+    # 会話履歴の表示
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    # ビジネスメールのまとめを表示（生成された場合）- 会話の最後に表示
     if "summary_email" in st.session_state and st.session_state.summary_email:
+        st.divider()
         st.success("✅ ビジネスメールが生成されました！")
         with st.expander("📧 生成されたビジネスメール", expanded=True):
             st.markdown(st.session_state.summary_email)
@@ -332,13 +338,6 @@ def main():
             if st.button("❌ まとめを閉じる", use_container_width=True):
                 del st.session_state.summary_email
                 st.rerun()
-        
-        st.divider()
-    
-    # 会話履歴の表示
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
     
     # 入力フォーム
     user_input = st.chat_input("質問を入力してください...")
