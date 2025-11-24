@@ -530,7 +530,7 @@ def main():
         "相談したい専門家を選択してください:",
         options=["business", "concierge", "law", "legal_check"],
         format_func=lambda x: "💼 優秀で丁寧な営業マン" if x == "business" else ("🏪 隈川写真館コンシェルジュ" if x == "concierge" else ("⚖️ 日本の法律の専門家" if x == "law" else "📝 リーガルチェック")),
-        index=0
+        index=1
     )
     
     # 選択された専門家の表示
