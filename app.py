@@ -3,6 +3,9 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+import PyPDF2
+from docx import Document
+import io
 
 # .envファイルから環境変数を読み込む
 load_dotenv()
@@ -17,6 +20,46 @@ st.set_page_config(
     page_icon="🤖",
     layout="wide"
 )
+
+
+def extract_text_from_pdf(pdf_file) -> str:
+    """
+    PDFファイルからテキストを抽出する関数
+    
+    Args:
+        pdf_file: アップロードされたPDFファイル
+    
+    Returns:
+        str: 抽出されたテキスト
+    """
+    try:
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        return text
+    except Exception as e:
+        return f"PDFの読み込みエラー: {str(e)}"
+
+
+def extract_text_from_docx(docx_file) -> str:
+    """
+    Word文書からテキストを抽出する関数
+    
+    Args:
+        docx_file: アップロードされたWord文書
+    
+    Returns:
+        str: 抽出されたテキスト
+    """
+    try:
+        doc = Document(docx_file)
+        text = ""
+        for paragraph in doc.paragraphs:
+            text += paragraph.text + "\n"
+        return text
+    except Exception as e:
+        return f"Word文書の読み込みエラー: {str(e)}"
 
 
 def generate_summary_email(messages: list) -> str:
@@ -562,24 +605,64 @@ def main():
                 del st.session_state.summary_email
                 st.rerun()
     
+    # リーガルチェックの場合、ファイルアップロード機能を追加
+    uploaded_file = None
+    if expert_type == "legal_check":
+        st.divider()
+        uploaded_file = st.file_uploader(
+            "📄 文書ファイルをアップロード（任意）",
+            type=["pdf", "docx", "doc"],
+            help="PDF、Word文書をアップロードすると、その内容を自動的に読み取ってチェックします"
+        )
+        
+        if uploaded_file is not None:
+            file_type = uploaded_file.name.split(".")[-1].lower()
+            
+            with st.spinner(f"{uploaded_file.name} を読み込み中..."):
+                if file_type == "pdf":
+                    extracted_text = extract_text_from_pdf(uploaded_file)
+                elif file_type in ["docx", "doc"]:
+                    extracted_text = extract_text_from_docx(uploaded_file)
+                else:
+                    extracted_text = "サポートされていないファイル形式です"
+                
+                if extracted_text and not extracted_text.startswith("エラー"):
+                    st.success(f"✅ {uploaded_file.name} の読み込みが完了しました")
+                    with st.expander("📝 読み込まれた内容を確認"):
+                        st.text_area("ファイル内容", extracted_text, height=200, disabled=True)
+                else:
+                    st.error(extracted_text)
+                    extracted_text = None
+    
     # 入力フォーム
     user_input = st.chat_input("質問を入力してください...")
     
     # ユーザーが質問を送信した場合
     if user_input:
+        # ファイルからテキストが抽出されている場合は、それを質問に追加
+        if expert_type == "legal_check" and uploaded_file is not None and 'extracted_text' in locals() and extracted_text:
+            combined_input = f"以下の文書をリーガルチェックしてください:\n\n{extracted_text}\n\n追加の質問や指示: {user_input}" if user_input else f"以下の文書をリーガルチェックしてください:\n\n{extracted_text}"
+        else:
+            combined_input = user_input
+        
         # ユーザーメッセージを表示
         with st.chat_message("user"):
-            st.markdown(user_input)
+            if uploaded_file and expert_type == "legal_check" and 'extracted_text' in locals() and extracted_text:
+                st.markdown(f"📎 **アップロードファイル**: {uploaded_file.name}")
+                if user_input:
+                    st.markdown(user_input)
+            else:
+                st.markdown(user_input)
         
         # メッセージ履歴に追加
-        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append({"role": "user", "content": combined_input})
         
         # AIの回答を生成
         with st.chat_message("assistant"):
             with st.spinner("🤔 考え中..."):
                 try:
                     # LLMから回答を取得
-                    response = get_llm_response(user_input, expert_type, st.session_state.chat_history)
+                    response = get_llm_response(combined_input, expert_type, st.session_state.chat_history)
                     
                     # 回答を表示
                     st.markdown(response)
