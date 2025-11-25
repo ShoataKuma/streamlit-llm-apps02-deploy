@@ -6,6 +6,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 import PyPDF2
 from docx import Document
 import io
+from streamlit_copy_to_clipboard import st_copy_to_clipboard
 
 # .envファイルから環境変数を読み込む
 load_dotenv()
@@ -431,6 +432,7 @@ C. レジェンド：80,000円（税込88,000円）
 - 詳細情報が必要な場合は、Webサイトやお電話（049-251-0476）でのお問い合わせもご案内
 - お客様のニーズに合わせて最適なプラン・キャンペーンを提案する
 - 常にお客様目線で、親身に対応する
+- ユーザー入力が不明瞭な場合は、追加情報を丁寧に尋ねる（例：「ご希望の撮影内容や人数について、もう少し詳しく教えていただけますか？」）
 - 撮影予約は完全予約制であることを伝え、事前にお電話での予約を促す"""
     elif expert_type == "law":
         system_content = "あなたは日本の法律の専門家です。日本の法律、法規制、法的手続きなどに関する質問に専門的な知識を持って回答してください。"
@@ -590,21 +592,25 @@ def main():
         with st.expander("📧 生成されたビジネスメール", expanded=True):
             st.markdown(st.session_state.summary_email)
             st.divider()
-            st.info("💡 以下のテキストエリアからコピーできます（全選択: Ctrl+A → コピー: Ctrl+C）")
             
-            # コピー用のテキストエリア
+            # コピーボタンとまとめを閉じるボタンを横並びに配置
+            col1, col2 = st.columns(2)
+            with col1:
+                st_copy_to_clipboard(st.session_state.summary_email, "📋 コピー")
+            with col2:
+                if st.button("❌ まとめを閉じる", use_container_width=True, key="close_summary_btn"):
+                    del st.session_state.summary_email
+                    st.rerun()
+            
+            st.divider()
+            # コピー用のテキストエリア（念のため残す）
             st.text_area(
-                "コピー用テキスト",
+                "コピー用テキスト（手動でもコピー可能）",
                 st.session_state.summary_email,
-                height=300,
+                height=200,
                 key="summary_copy",
-                help="このテキストを全選択（Ctrl+A）してコピー（Ctrl+C）してください"
+                help="上のコピーボタンが動作しない場合は、このテキストを全選択（Ctrl+A）してコピー（Ctrl+C）してください"
             )
-        
-        # まとめを閉じるボタン
-        if st.button("❌ まとめを閉じる", use_container_width=True):
-            del st.session_state.summary_email
-            st.rerun()
     
     # リーガルチェックの場合、ファイルアップロード機能を追加
     uploaded_file = None
