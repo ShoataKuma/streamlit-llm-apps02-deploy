@@ -310,7 +310,7 @@ C. レジェンド：80,000円（税込88,000円）
 例：お子様1人＋ご家族2ポーズ→通常27,500円が30％OFFで19,250円
 登録料：5,500円（税込）、2冊目のアルバム無料
 
-■ 証明写真
+■ 証明写真（予約不要（プレミアム証明写真とオーディションフォトのみ完全予約制））
 【証明写真】2,750円：写真2枚＋CDデータ付、翌営業日15時仕上
 - サイズ：2×2cm～7×5cm（1mm単位）
 - 撮影範囲：上半身のみ
@@ -396,7 +396,7 @@ C. レジェンド：80,000円（税込88,000円）
 - 単品貸しも相談可
 
 ■ 撮影の流れ
-1. ご予約：完全予約制（成人の日のみご来館順）
+1. 記念写真はご予約：完全予約制（成人の日のみご来館順）
 2. 衣装選び：七五三、成人男性袴、卒業袴は撮影日前に選ぶ
 3. 撮影：5分～30分（デザインアルバムは1時間弱）
 4. 写真選び：その場でテレビモニターで確認、選択
@@ -584,30 +584,22 @@ def main():
         st.success("✅ ビジネスメールが生成されました！")
         with st.expander("📧 生成されたビジネスメール", expanded=True):
             st.markdown(st.session_state.summary_email)
+            st.divider()
+            st.info("💡 以下のテキストエリアからコピーできます（全選択: Ctrl+A → コピー: Ctrl+C）")
             
             # コピー用のテキストエリア
             st.text_area(
-                "コピー用",
+                "コピー用テキスト",
                 st.session_state.summary_email,
                 height=300,
-                key="summary_copy"
+                key="summary_copy",
+                help="このテキストを全選択（Ctrl+A）してコピー（Ctrl+C）してください"
             )
         
-        # コピーボタンとまとめを閉じるボタンを横並びに配置
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("📋 コピー", use_container_width=True):
-                st.toast("クリップボードにコピーされました！", icon="✅")
-                # JavaScriptを使用してクリップボードにコピー
-                st.write(f"""
-                <script>
-                navigator.clipboard.writeText(`{st.session_state.summary_email.replace('`', '\\`')}`);
-                </script>
-                """, unsafe_allow_html=True)
-        with col2:
-            if st.button("❌ まとめを閉じる", use_container_width=True):
-                del st.session_state.summary_email
-                st.rerun()
+        # まとめを閉じるボタン
+        if st.button("❌ まとめを閉じる", use_container_width=True):
+            del st.session_state.summary_email
+            st.rerun()
     
     # リーガルチェックの場合、ファイルアップロード機能を追加
     uploaded_file = None
