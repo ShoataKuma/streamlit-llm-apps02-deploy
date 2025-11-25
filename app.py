@@ -6,7 +6,6 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 import PyPDF2
 from docx import Document
 import io
-from streamlit_copy_to_clipboard import st_copy_to_clipboard
 
 # .envファイルから環境変数を読み込む
 load_dotenv()
@@ -592,25 +591,15 @@ def main():
         with st.expander("📧 生成されたビジネスメール", expanded=True):
             st.markdown(st.session_state.summary_email)
             st.divider()
+            st.info("💡 以下のテキストをコピーしてご利用ください")
             
-            # コピーボタンとまとめを閉じるボタンを横並びに配置
-            col1, col2 = st.columns(2)
-            with col1:
-                st_copy_to_clipboard(st.session_state.summary_email, "📋 コピー")
-            with col2:
-                if st.button("❌ まとめを閉じる", use_container_width=True, key="close_summary_btn"):
-                    del st.session_state.summary_email
-                    st.rerun()
+            # コピー用のテキストエリア
+            st.code(st.session_state.summary_email, language=None)
             
-            st.divider()
-            # コピー用のテキストエリア（念のため残す）
-            st.text_area(
-                "コピー用テキスト（手動でもコピー可能）",
-                st.session_state.summary_email,
-                height=200,
-                key="summary_copy",
-                help="上のコピーボタンが動作しない場合は、このテキストを全選択（Ctrl+A）してコピー（Ctrl+C）してください"
-            )
+            # まとめを閉じるボタン
+            if st.button("❌ まとめを閉じる", use_container_width=True, key="close_summary_btn"):
+                del st.session_state.summary_email
+                st.rerun()
     
     # リーガルチェックの場合、ファイルアップロード機能を追加
     uploaded_file = None
